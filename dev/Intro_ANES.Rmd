@@ -83,6 +83,7 @@ barplot(table(anes_dat$VCF0004),
 Some variables are asked nearly all the years and some are asked only a few years. 
 
 ```{r NAs}
+library(tidyverse)
 anes_NAs=anes_dat%>%
   summarise_all(list(na.mean=function(x){
                               mean(is.na(x))}))
