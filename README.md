@@ -9,7 +9,7 @@ This is the first and only *individual* (as opposed to *team*) this semester.
 
 Term: Fall 2020
 
-+ Projec title: Lorem ipsum dolor sit amet
++ Projec title: *How would higher educationer vote for election?*
 + This project is conducted by *Mubai Liu*
 
 + Project summary: As the time has come to 2020, the education evovled so much in the past centeries. It seems that nowadays the Repulican Party would rather cut off the education or any other supporing fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives (https://www.britannica.com/topic/Democratic-Party). Because the Democratic Party favors government programs like welfare, in theory it would make sense for more educated voters to vote for the Democratic Party than the Republican Party.
