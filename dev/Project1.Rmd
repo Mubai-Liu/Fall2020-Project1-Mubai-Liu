@@ -12,3 +12,41 @@ The *American National Election Studies* (ANES) are surveys of voters in the U.S
 
 
 The *Time Series Cumulative Data* of ANES include answers, from respondents from different years, on selected questions that have been asked in three or more ANES' *Time Series* studies. Tremendous amount of efforts have been put into data consolidation as variables are often named differently in different years. 
+
+
+```{r, include  = FALSE}
+library(haven)
+library(tidyverse)
+anes_dat <-
+    read_sav("../data/anes_timeseries_cdf.sav")
+```
+
+
+
+```{r process data, warning = FALSE, message = F, include = F}
+Election_years = as.character((seq(1948, 2016, 4)))
+anes_use=anes_dat%>%
+  mutate(
+    year=as_factor(VCF0004),
+    turnout=as_factor(VCF0703),
+    vote=as_factor(VCF0706),
+    race=as_factor(VCF0105a),
+    gender=as_factor(VCF0104),
+    education = as_data_frame(VCF0140a),
+    income = as_factor(VCF0114),
+    region = as_factor(VCF0112)
+  )%>%
+  filter(year %in% Election_years) %>%
+  select(year,
+         turnout,
+         vote,
+         race,
+         gender,
+         education,
+         income,
+         region)
+
+save(anes_use, file = "../output/data_story_use.RData")
+```
+
+
