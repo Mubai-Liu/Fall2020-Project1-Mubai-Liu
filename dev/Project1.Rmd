@@ -9,7 +9,7 @@ output: html_document
 
 imagesource
 
-As the time has come to 2020, the education evovled so much in the past centeries. It seems that nowadays the Repulican Party would rather cut off the education or any other supporing fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives (https://www.britannica.com/topic/Democratic-Party). Because the Democratic Party favors government programs like welfare, in theory it would make sense for more educated voters to vote for the Democratic Party than the Republican Party.
+As the time has come to 2020, the education evovled so much in the past centeries. It seems that nowadays the Repulican Party would rather cut off the education or any other supporing fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. Because the Democratic Party favors government programs like welfare, in theory it would make sense for more educated voters to vote for the Democratic Party than the Republican Party.
 
 
 In this blog of data analysis, we'll try to answer the following questions:
@@ -33,7 +33,7 @@ The *Time Series Cumulative Data* of ANES include answers, from respondents from
 
 Although it is a reliable and crediable resource of data, the potential bias is inevitably exists in the dataset as we have shown in below.
 
-```{r year barplot}
+```{r year barplot, include = F}
 barplot(table(anes_dat$VCF0004),
         las=2,
         main="number of respondents over the years")
@@ -42,7 +42,7 @@ Due to some reasons with either technical or human resources issues, each voting
 
 Another downside of this dataset is that some variables are asked nearly all the years and some are asked only a few years, we can see it through the following figure by noticing how much NA values exists. 
 
-```{r NAs}
+```{r NAs, include = F}
 library(tidyverse)
 anes_NAs=anes_dat%>%
   summarise_all(list(na.mean=function(x){
@@ -55,9 +55,6 @@ ggplot(anes_NAs, aes(x=nas)) +
                  binwidth=0.05)+
   labs(title="Fractions of missing values")
 ```
-Normally, analyzing income data from surveys can be problematic since income can be an uncomfortable topic to discuss for some people, and this opens up the possibility of some respondents claiming to be in a higher income level than the income level they are actually in. However, a respondent does not have any incentive to say they are in a lower income level than their actual income level. Hence, we might lose a little bit of data due to low income respondents saying they are in a higher income level, but it is unlikely that we will have any data from respondents who are from a higher income level claiming to have low income. This means that all of the respondents we analyze who claim to have low income most likely actually have low income. Thus, by mainly analyzing low income respondents instead of medium to high income respondents, we remove some of this self-reporting bias.
-
-# Education break down
 ```{r process data, warning = FALSE, message = F, include = F}
 Election_years = as.character((seq(1948, 2016, 4)))
 anes_use=anes_dat%>%
@@ -85,6 +82,12 @@ anes_use=anes_dat%>%
 
 save(anes_use, file = "../output/data_story_use.RData")
 ```
+
+Therefore, when handling the data, we must avoid directly using the ones with NA values or otherwise it would be problematic for the visualization. Despite all of the "technical" problems with the dataset, we also might want to logically discuss about the higher educational people's behavior before the committing such surveys. We understand that as the time goes on, more and more people become the category as classified "high". To be more precise with our common knowledge, we'll treat the people who are grade above as high. The potential bias of the survey may exist due to the fact that people may lie to the reporter, but since most college degrees would require a diploma or some identity verification, we might not worry too much about the number of misclassification to be high. 
+
+
+# Education break down
+
 
 
 
