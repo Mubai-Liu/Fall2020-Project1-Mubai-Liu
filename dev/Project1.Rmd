@@ -6,12 +6,8 @@ output: html_document
 ---
 
 
-
+## High eduation voting behavior
 # 1. Introduction
-The *American National Election Studies* (ANES) are surveys of voters in the U.S. on the national scale. For each presidential election since 1948, ANES collects responses from respondents both before and after the election. The goal of ANES is to understand political behaviors using systematic surveys. ANES's data and results have been routinely used by news outlets, election campaigns and political researchers.
-
-
-The *Time Series Cumulative Data* of ANES include answers, from respondents from different years, on selected questions that have been asked in three or more ANES' *Time Series* studies. Tremendous amount of efforts have been put into data consolidation as variables are often named differently in different years. 
 
 
 ```{r, include  = FALSE}
@@ -21,7 +17,20 @@ anes_dat <-
     read_sav("../data/anes_timeseries_cdf.sav")
 ```
 
+#2 Biases
+We will be using the ANES time series data (1948-2016) to analyze the voting behavior and demographic information of low income white Americans. For the sake of this analysis, we will define low income as 0 to 33 percentile.
 
+The *American National Election Studies* (ANES) are surveys of voters in the U.S. on the national scale. For each presidential election since 1948, ANES collects responses from respondents both before and after the election. The goal of ANES is to understand political behaviors using systematic surveys. ANES's data and results have been routinely used by news outlets, election campaigns and political researchers.
+
+
+The *Time Series Cumulative Data* of ANES include answers, from respondents from different years, on selected questions that have been asked in three or more ANES' *Time Series* studies. Tremendous amount of efforts have been put into data consolidation as variables are often named differently in different years. 
+
+
+
+
+We will only examine voting behavior of low income white Democrats and Republicans. There is not as much data on Independent voters compared to that of the two main parties, and different Independent candidates do not necessarily share the same ideologies. Hence, it would be harder to narrow in on demographics of Independent voters throughout the years.
+
+Normally, analyzing income data from surveys can be problematic since income can be an uncomfortable topic to discuss for some people, and this opens up the possibility of some respondents claiming to be in a higher income level than the income level they are actually in. However, a respondent does not have any incentive to say they are in a lower income level than their actual income level. Hence, we might lose a little bit of data due to low income respondents saying they are in a higher income level, but it is unlikely that we will have any data from respondents who are from a higher income level claiming to have low income. This means that all of the respondents we analyze who claim to have low income most likely actually have low income. Thus, by mainly analyzing low income respondents instead of medium to high income respondents, we remove some of this self-reporting bias.
 
 ```{r process data, warning = FALSE, message = F, include = F}
 Election_years = as.character((seq(1948, 2016, 4)))
@@ -32,9 +41,10 @@ anes_use=anes_dat%>%
     vote=as_factor(VCF0706),
     race=as_factor(VCF0105a),
     gender=as_factor(VCF0104),
-    education = as_data_frame(VCF0140a),
+    education = as_factor(VCF0140a),
     income = as_factor(VCF0114),
-    region = as_factor(VCF0112)
+    region = as_factor(VCF0112),
+    care.win = as_factor(VCF0311)
   )%>%
   filter(year %in% Election_years) %>%
   select(year,
@@ -44,9 +54,38 @@ anes_use=anes_dat%>%
          gender,
          education,
          income,
-         region)
+         region,
+         care.win)
 
 save(anes_use, file = "../output/data_story_use.RData")
 ```
 
+```{r}
+anes_to_race_year = anes_use %>%
+  filter(!is.na(race) & !is.na(turnout))%>%
+  group_by(year, race)%>%
+  count(turnout)%>%
+  group_by(year, race)%>%
+  mutate(
+    prop=n/sum(n)
+  )
+
+anes_to_race_year
+anes_use %>% filter(!is.na(region) & !is.na(education)) %>% group_by(year, region) %>% count(turnout) %>% group_by(year, region) %>% mutate(prop = n/sum(n))
+ggplot(anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% group_by(year, education) %>% count(turnout) %>% group_by(year, turnout) %>% mutate(prop = n/sum(n)), 
+       aes(x=year, y=prop, fill=turnout)) +
+  geom_bar(stat="identity", colour="black") + facet_wrap(~education, ncol=1) + theme_bw()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_fill_brewer(palette="Blues")+
+  labs(title="How did different racial groups participated in the election \n over the years?")
+
+anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% select(year, turnout, education)
+
+ggplot(anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% select(year, turnout, education) %>% filter(turnout == "3. Voted (registered)") %>% group_by(year) %>% count(education) %>% group_by(year) %>% mutate(prop = n/sum(n)),
+       aes(x = year, y = prop, fill = education)) +
+  geom_bar(stat = "identity", colour = "black")
+
+
+
+```
 
