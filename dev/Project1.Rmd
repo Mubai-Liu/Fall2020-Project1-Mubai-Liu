@@ -1,5 +1,5 @@
 ---
-title: "How would higher education people vote"
+title: "Education vs. Election of White Americans"
 author: "Mubai Liu"
 date: "9/30/2020"
 output: html_document
@@ -9,16 +9,16 @@ output: html_document
 
 imagesource
 
-As the time has come to 2020, the education evolved so much in the past centeries. It seems that nowadays the Republican Party would rather cut off the education or any other supporing fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. Because the Democratic Party favors government programs like welfare, in theory it would make sense for more educated voters to vote for the Democratic Party than the Republican Party.
+As the time has come to 2020, the education evolved so much in the past centuries. It seems that nowadays the Republican Party would rather cut off the education or any other supporting fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. As more and more programs of supporting the educational resources, the voting behavior of high educational people is under a swift change in the up coming few decades.
 
 
-In this blog of data analysis, we'll try to answer the following questions:
+To be more specific on what we are trying to explore in this blog of data analysis, we'll try to answer the following questions:
 
--What is the presidential voting behavior of high educated Americans?
+-Would the education be a huge factor the the presidential voting?
 
--What are the potential reasons that might support their voting behavior?
+-What are the potential reasons that might support the shift of voting behavior?
 
-```{r, include  = FALSE}
+```{r, include = FALSE}
 library(haven)
 library(tidyverse)
 anes_dat <-
@@ -33,7 +33,7 @@ The *Time Series Cumulative Data* of ANES include answers, from respondents from
 
 Although it is a reliable and credible resource of data, the potential bias is inevitably exists in the dataset as we have shown in below.
 
-```{r year barplot, include = F}
+```{r year barplot, message = F, echo = F}
 barplot(table(anes_dat$VCF0004),
         las=2,
         main="number of respondents over the years")
@@ -42,18 +42,19 @@ Due to some reasons with either technical or human resources issues, each voting
 
 Another downside of this dataset is that some variables are asked nearly all the years and some are asked only a few years, we can see it through the following figure by noticing how much NA values exists. 
 
-```{r NAs, include = F}
+```{r NAs, echo = F}
 library(tidyverse)
 anes_NAs=anes_dat%>%
   summarise_all(list(na.mean=function(x){
                               mean(is.na(x))}))
 anes_NAs=data.frame(nas=unlist(t(anes_NAs)))
-
 ggplot(anes_NAs, aes(x=nas)) + 
   geom_histogram(color="black", 
                  fill="white",
                  binwidth=0.05)+
-  labs(title="Fractions of missing values")
+  labs(title="Fractions of missing values",
+       x = "NA values") + 
+  theme_light()
 ```
 ```{r process data, warning = FALSE, message = F, include = F}
 Election_years = as.character((seq(1948, 2016, 4)))
@@ -67,7 +68,11 @@ anes_use=anes_dat%>%
     education = as_factor(VCF0140a),
     income = as_factor(VCF0114),
     region = as_factor(VCF0112),
-    care.win = as_factor(VCF0311)
+    care.win = as_factor(VCF0311),
+    loc.perf = as_factor(VCF0652),
+    pres.perf = as_factor(VCF0653),
+    media.trust = as_factor(VCF0675),
+    gov.spend = as_factor(VCF0839)
   )%>%
   filter(year %in% Election_years) %>%
   select(year,
@@ -88,8 +93,8 @@ Therefore, when handling the data, we must avoid directly using the ones with NA
 
 
 
-```{r}
-ggplot(anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% select(year, turnout, education) %>% filter(turnout == "3. Voted (registered)") %>% group_by(year) %>% count(education) %>% group_by(year) %>% mutate(prop = n/sum(n)),
+```{r, echo = F}
+ggplot(anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% select(year, turnout, education, race) %>% filter(turnout == "3. Voted (registered)") %>% filter(race == "1. White non-Hispanic (1948-2012)") %>% group_by(year) %>% count(education) %>% group_by(year) %>% mutate(prop = n/sum(n)),
        aes(x = year, y = prop, fill = education)) +
   geom_bar(stat = "identity", colour = "black")
 ```
@@ -106,6 +111,7 @@ anes_use %>%
 
 ggplot(anes_use %>% 
   filter(!is.na(education) & !is.na(vote)) %>%
+  filter(race == "1. White non-Hispanic (1948-2012)") %>%
   filter(vote != "7. Did not vote or voted but not for president (exc.1972)") %>%
   group_by(year, education) %>%
   count(vote) %>%
@@ -119,7 +125,7 @@ ggplot(anes_use %>%
 
 
 
-# Income breakdown
+# Turnout rate
 ```{r}
 anes_to_race_year = anes_use %>%
   filter(!is.na(race) & !is.na(turnout))%>%
@@ -133,7 +139,7 @@ anes_to_race_year = anes_use %>%
 ```
 # Difference in Region
 
-```{r}
+```{r, fig.height=14, fig.width=14}
 anes_use %>% 
   filter(!is.na(education) & !is.na(region)) %>%
   group_by(year, education) %>%
@@ -146,6 +152,7 @@ ggplot(
 anes_use %>% 
   filter(!is.na(education) & !is.na(region)) %>%
   filter(vote == "1. Democrat") %>%
+  filter(race == "1. White non-Hispanic (1948-2012)") %>%
   group_by(year, education) %>%
   count(region) %>%
   group_by(year, education) %>%
@@ -161,12 +168,39 @@ anes_use %>%
 
 # Attitude towards voting
 
+```{r, echo = F, fig.height=10, fig.width=14}
+anes_use %>% 
+  filter(!is.na(education) & !is.na(care.win)) %>%
+  filter(vote == "1. Democrat") %>%
+  filter(education == "6. BA level degrees" | education == "7. Advanced degrees incl. LLB") %>%
+  group_by(year, education) %>%
+  count(care.win) %>%
+  group_by(year, education) %>%
+  mutate(prop = n/sum(n))
+
+
+ggplot(anes_use %>% 
+  filter(!is.na(education) & !is.na(care.win)) %>%
+  filter(vote == "1. Democrat") %>%
+#  filter(education == "6. BA level degrees" | education == "7. Advanced degrees incl. LLB") %>%
+  group_by(year, education) %>%
+  count(care.win) %>%
+  group_by(year, education) %>%
+  mutate(prop = n/sum(n))
+, aes(x = year, y = prop, group = care.win)) +
+  geom_line(aes(linetype = care.win, color = education)) + 
+  facet_wrap(~education)
+```
+
+
+
+
 # Conclusion
 
-In conclusion, this analysis establishes that a majority of low income white Americans have voted for the Republican Party over the years.
+In conclusion, this might conclude that the voting behavior for white Americans high educational system people have changed a lot.
 
 Despite the fact that the Democratic Party typically promises more government aid programs, most low income white Republicans emphasize family ties and a strong relationship with Christianity and their church to help with their everyday problems, including financial problems, rather than relying on the government. Moreover, their high emphasis on community and values informed by their religion are reflected in their high turnout rate so that they can have a government that supports those values but does not intrude on their community. On the other hand, many low income white Democrats are Christian as well, but religion typically plays less of a role in their lives, and they believe more in government aid like welfare programs.
 
 However, there could be additional variables in the survey we did not explore or even variables that were not in the survey at all that could explain more about these differences in voting behavior. Note that attributes like age, gender, occupation, region, and education levels did not seem to indicate that a person would be more likely to vote Democrat or Republican, but I have omitted this result from the analysis to focus more on differences rather than similarities.
 
-Finally, although we now know more about the demographic differences betweeen low income white Republicans and low income white Democrats, we still do not actually know for sure if these differences are merely correlated with their voting decisions or if they actually cause them to vote the way they do. We would need to use some causal inference techniques on the survey results or look at data other than the survey results to determine actual causal effects on low income white Americans’ voting behavior.
+Finally, although we now know more about the demographic differences between low income white Republicans and low income white Democrats, we still do not actually know for sure if these differences are merely correlated with their voting decisions or if they actually cause them to vote the way they do. We would need to use some causal inference techniques on the survey results or look at data other than the survey results to determine actual causal effects on low income white Americans’ voting behavior.
