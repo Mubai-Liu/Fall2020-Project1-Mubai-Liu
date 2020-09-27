@@ -6,7 +6,7 @@ output: html_document
 ---
 
 # 1. Introduction
-
+<img src="../figs/PoliticsEducation.jpg" width="150">
 imagesource
 
 As the time has come to 2020, the education evolved so much in the past centuries. It seems that nowadays the Republican Party would rather cut off the education or any other supporting fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. As more and more programs of supporting the educational resources, the voting behavior of high educational people is under a swift change in the up coming few decades.
