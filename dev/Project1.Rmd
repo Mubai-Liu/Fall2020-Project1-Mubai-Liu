@@ -9,7 +9,7 @@ output: html_document
 
 imagesource
 
-As the time has come to 2020, the education evovled so much in the past centeries. It seems that nowadays the Repulican Party would rather cut off the education or any other supporing fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. Because the Democratic Party favors government programs like welfare, in theory it would make sense for more educated voters to vote for the Democratic Party than the Republican Party.
+As the time has come to 2020, the education evolved so much in the past centeries. It seems that nowadays the Republican Party would rather cut off the education or any other supporing fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. Because the Democratic Party favors government programs like welfare, in theory it would make sense for more educated voters to vote for the Democratic Party than the Republican Party.
 
 
 In this blog of data analysis, we'll try to answer the following questions:
@@ -31,7 +31,7 @@ The *American National Election Studies* (ANES) are surveys of voters in the U.S
 
 The *Time Series Cumulative Data* of ANES include answers, from respondents from different years, on selected questions that have been asked in three or more ANES' *Time Series* studies. Tremendous amount of efforts have been put into data consolidation as variables are often named differently in different years. 
 
-Although it is a reliable and crediable resource of data, the potential bias is inevitably exists in the dataset as we have shown in below.
+Although it is a reliable and credible resource of data, the potential bias is inevitably exists in the dataset as we have shown in below.
 
 ```{r year barplot, include = F}
 barplot(table(anes_dat$VCF0004),
@@ -83,11 +83,39 @@ anes_use=anes_dat%>%
 save(anes_use, file = "../output/data_story_use.RData")
 ```
 
-Therefore, when handling the data, we must avoid directly using the ones with NA values or otherwise it would be problematic for the visualization. Despite all of the "technical" problems with the dataset, we also might want to logically discuss about the higher educational people's behavior before the committing such surveys. We understand that as the time goes on, more and more people become the category as classified "high". To be more precise with our common knowledge, we'll treat the people who are grade above as high. The potential bias of the survey may exist due to the fact that people may lie to the reporter, but since most college degrees would require a diploma or some identity verification, we might not worry too much about the number of misclassification to be high. 
+Therefore, when handling the data, we must avoid directly using the ones with NA values or otherwise it would be problematic for the visualization. Despite all of the "technical" problems with the dataset, we also might want to logically discuss about the higher educational people's behavior before the committing such surveys. We understand that as the time goes on, more and more people become the category as classified "high". To be more precise with our common knowledge, we'll treat the people who at least has a college degree as "high". The potential bias of the survey may exist due to the fact that people may lie to the reporter, but since most college degrees would require a diploma or some identity verification, we might not worry too much about the number of misclassification to be high. 
 
 
+
+
+```{r}
+ggplot(anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% select(year, turnout, education) %>% filter(turnout == "3. Voted (registered)") %>% group_by(year) %>% count(education) %>% group_by(year) %>% mutate(prop = n/sum(n)),
+       aes(x = year, y = prop, fill = education)) +
+  geom_bar(stat = "identity", colour = "black")
+```
 # Education break down
 
+```{r, fig.height=14, fig.width=14}
+anes_use %>% 
+  filter(!is.na(education) & !is.na(vote)) %>%
+  filter(vote != "7. Did not vote or voted but not for president (exc.1972)") %>%
+  group_by(year, education) %>%
+  count(vote) %>%
+  group_by(year, education) %>%
+  mutate(prop = n/sum(n))
+
+ggplot(anes_use %>% 
+  filter(!is.na(education) & !is.na(vote)) %>%
+  filter(vote != "7. Did not vote or voted but not for president (exc.1972)") %>%
+  group_by(year, education) %>%
+  count(vote) %>%
+  group_by(year, education) %>%
+  mutate(prop = n/sum(n)),
+  aes(x = year, y = prop, fill = vote)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual('Vote', values = c("dodgerblue3", "firebrick2", "gold1", "lightgoldenrod1")) +
+  facet_wrap(~education)
+```
 
 
 
@@ -102,25 +130,34 @@ anes_to_race_year = anes_use %>%
     prop=n/sum(n)
   )
 
-anes_to_race_year
-anes_use %>% filter(!is.na(region) & !is.na(education)) %>% group_by(year, region) %>% count(turnout) %>% group_by(year, region) %>% mutate(prop = n/sum(n))
-ggplot(anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% group_by(year, education) %>% count(turnout) %>% group_by(year, turnout) %>% mutate(prop = n/sum(n)), 
-       aes(x=year, y=prop, fill=turnout)) +
-  geom_bar(stat="identity", colour="black") + facet_wrap(~education, ncol=1) + theme_bw()+
-  theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_brewer(palette="Blues")+
-  labs(title="How did different racial groups participated in the election \n over the years?")
-
-anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% select(year, turnout, education)
-
-ggplot(anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% select(year, turnout, education) %>% filter(turnout == "3. Voted (registered)") %>% group_by(year) %>% count(education) %>% group_by(year) %>% mutate(prop = n/sum(n)),
-       aes(x = year, y = prop, fill = education)) +
-  geom_bar(stat = "identity", colour = "black")
-
-
-
 ```
 # Difference in Region
+
+```{r}
+anes_use %>% 
+  filter(!is.na(education) & !is.na(region)) %>%
+  group_by(year, education) %>%
+  count(region) %>%
+  group_by(year, education) %>%
+  mutate(prop = n/sum(n))
+
+
+ggplot(
+anes_use %>% 
+  filter(!is.na(education) & !is.na(region)) %>%
+  filter(vote == "1. Democrat") %>%
+  group_by(year, education) %>%
+  count(region) %>%
+  group_by(year, education) %>%
+  mutate(prop = n/sum(n))
+, aes(x = year, y = prop, fill = region)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual('Vote', values = c("dodgerblue3", "firebrick2", "gold1", "lightgoldenrod1", "green", "orange", "gold")) +
+  facet_wrap(~education)
+```
+
+
+
 
 # Attitude towards voting
 
