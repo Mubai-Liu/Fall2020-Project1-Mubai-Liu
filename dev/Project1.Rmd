@@ -1,24 +1,9 @@
 ---
-title: "Education vs. Election of White Americans"
+title: "How did education play a part in the election?"
 author: "Mubai Liu"
 date: "9/30/2020"
 output: html_document
 ---
-
-# 1. Introduction
-<img src="../figs/PoliticsEducation.jpg" width="150">
-
-
-imagesource
-
-As the time has come to 2020, the education evolved so much in the past centuries. It seems that nowadays the Republican Party would rather cut off the education or any other supporting fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. As more and more programs of supporting the educational resources, the voting behavior of high educational people is under a swift change in the up coming few decades.
-
-
-To be more specific on what we are trying to explore in this blog of data analysis, we'll try to answer the following questions:
-
--Would the education be a huge factor the the presidential voting?
-
--What are the potential reasons that might support the shift of voting behavior?
 
 ```{r, include = FALSE}
 library(haven)
@@ -27,39 +12,7 @@ anes_dat <-
     read_sav("../data/anes_timeseries_cdf.sav")
 ```
 
-# 2. Data and Potential Biases
 
-The *American National Election Studies* (ANES) are surveys of voters in the U.S. on the national scale. For each presidential election since 1948, ANES collects responses from respondents both before and after the election. The goal of ANES is to understand political behaviors using systematic surveys. ANES's data and results have been routinely used by news outlets, election campaigns and political researchers.
-
-The *Time Series Cumulative Data* of ANES include answers, from respondents from different years, on selected questions that have been asked in three or more ANES' *Time Series* studies. Tremendous amount of efforts have been put into data consolidation as variables are often named differently in different years. 
-
-Although it is a reliable and credible resource of data, the potential bias is inevitably exists in the dataset as we have shown in below.
-
-```{r year barplot, message = F, echo = F}
-barplot(table(anes_dat$VCF0004),
-        las=2,
-        main="number of respondents over the years")
-```
-
-
-Due to some reasons with either technical or human resources issues, each voting year has a various amount of surveyed data from the lowest `r min(table(anes_dat$VCF0004))` to the highest `r max(table(anes_dat$VCF0004))`, which would cause some spike may happen in 2012 due to a larger sample size. We must consider each year's sample size to make a unbiased analysis. 
-
-Another downside of this dataset is that some variables are asked nearly all the years and some are asked only a few years, we can see it through the following figure by noticing how much NA values exists. 
-
-```{r NAs, echo = F}
-library(tidyverse)
-anes_NAs=anes_dat%>%
-  summarise_all(list(na.mean=function(x){
-                              mean(is.na(x))}))
-anes_NAs=data.frame(nas=unlist(t(anes_NAs)))
-ggplot(anes_NAs, aes(x=nas)) + 
-  geom_histogram(color="black", 
-                 fill="white",
-                 binwidth=0.05)+
-  labs(title="Fractions of missing values",
-       x = "NA values") + 
-  theme_light()
-```
 ```{r process data, warning = FALSE, message = F, include = F}
 Election_years = as.character((seq(1948, 2016, 4)))
 anes_use=anes_dat%>%
@@ -73,8 +26,6 @@ anes_use=anes_dat%>%
     income = as_factor(VCF0114),
     region = as_factor(VCF0112),
     care.win = as_factor(VCF0311),
-    loc.perf = as_factor(VCF0652),
-    pres.perf = as_factor(VCF0653),
     media.trust = as_factor(VCF0675),
     gov.spend = as_factor(VCF0839)
   )%>%
@@ -88,150 +39,200 @@ anes_use=anes_dat%>%
          income,
          region,
          care.win,
-         loc.perf,
-         pres.perf,
          media.trust,
          gov.spend)
-
+# save the processed data
 save(anes_use, file = "../output/data_story_use.RData")
 ```
 
-Therefore, when handling the data, we must avoid directly using the ones with NA values or otherwise it would be problematic for the visualization. Despite all of the "technical" problems with the dataset, we also might want to logically discuss about the higher educational people's behavior before the committing such surveys. We understand that as the time goes on, more and more people become the category as classified "high". To be more precise with our common knowledge, we'll treat the people who at least has a college degree as "high". The potential bias of the survey may exist due to the fact that people may lie to the reporter, but since most college degrees would require a diploma or some identity verification, we might not worry too much about the number of misclassification to be high. 
 
 
+<img src="../figs/vote.jpeg" width="1000">
+
+(Credit: driftwood - stock.adobe.com))
+
+# 1. Background and Introduction
+
+As the time has come to 2020, the education evolved so much in the past centuries. It seems that nowadays the Republican Party would rather cut off the education or any other supporting fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. As more and more programs of supporting the educational resources, the voting behavior of high educational people is under a swift change in the up coming few decades.
 
 
-```{r, echo = F}
-ggplot(anes_use %>% filter(!is.na(turnout) & !is.na(education)) %>% select(year, turnout, education, race) %>% filter(turnout == "3. Voted (registered)") %>% filter(race == "1. White non-Hispanic (1948-2012)") %>% group_by(year) %>% count(education) %>% group_by(year) %>% mutate(prop = n/sum(n)),
-       aes(x = year, y = prop, fill = education)) +
-  geom_bar(stat = "identity", colour = "black")
+The election in America has been through almost a century, over such a long period, things changed dramatically. Take education for example, back in the year of 1948, there's not much people who had a college degree and the system of education was not even comparable to today's system. To partially prove my point of having a huge difference in education over such a long period, here is what I've found using the survey data.
 
-## line?
+```{r, echo = F, fig.width=10}
+anes_edu <- anes_use %>% 
+  filter(!is.na(education)) %>% 
+  filter(race == "1. White non-Hispanic (1948-2012)") %>% 
+  group_by(year) %>% 
+  count(education) %>% 
+  group_by(year) %>% 
+  mutate(prop = n/sum(n))
+ggplot(anes_edu,aes(x = year, y = prop, group = education)) +
+  geom_smooth(aes(fill = education, color = education), method = "loess", formula = y~x)+
+  scale_color_manual('Education level', values = colorspace::diverge_hsv(7)) +
+  scale_fill_manual('Education level', values = colorspace::diverge_hsv(7))
+  #geom_bar(stat = "identity", colour = "black")
+```
+
+We are using the *American National Election Studies* (ANES)'s dataset. ANES are surveys of voters in the U.S. on the national scale. For each presidential election since 1948, ANES collects responses from respondents both before and after the election. The goal of ANES is to understand political behaviors using systematic surveys. ANES's data and results have been routinely used by news outlets, election campaigns and political researchers.
+
+The *Time Series Cumulative Data* of ANES include answers, from respondents from different years, on selected questions that have been asked in three or more ANES' *Time Series* studies. Tremendous amount of efforts have been put into data consolidation as variables are often named differently in different years. 
+
+This kind of change of time could influence people so much that even the voting behavior may shift from one party to the other like we are going to discuss about in this analysis blog. We may answer a few questions listed below to make the purpose more clear:
+
+1. Is there a change of how White American's high educated people vote for the party?
+2. If so, what are the potential factors of such phenomenon? Could we conclude that who have benefit the high educated group people will affect their voting result?
+
+<img src="../figs/PoliticsEducation.jpg" width="300">
+
+# 2. Potential Bias
+
+Although it is a reliable and a credible resource of data, the potential bias inevitably exists. The first is caused by the limitation of sample size.
+
+```{r year barplot, message = F, echo = F, fig.width=8}
+barplot(table(anes_dat$VCF0004),
+        las=2,
+        main="number of respondents over the years")
 ```
 
 
-# Education break down
+Due to some reasons with either technical or human resources issues, each voting year has a various amount of surveyed data from the lowest `r min(table(anes_dat$VCF0004))` to the highest `r max(table(anes_dat$VCF0004))`, which would cause some boost of total invested people like what happens in 2012. Therefore, we mainly use the proportion as a interests of field to discuss in this blog to eliminated the potential bias. 
 
-```{r, message = F, fig.height=14, fig.width=14}
-# anes_use %>% 
-#   filter(!is.na(education) & !is.na(vote)) %>%
-#   filter(vote != "7. Did not vote or voted but not for president (exc.1972)") %>%
-#   group_by(year, education) %>%
-#   count(vote) %>%
-#   group_by(year, education) %>%
-#   mutate(prop = n/sum(n))
+Another downside of the survey data is that some variables are asked nearly all the years and some are asked only a few years. This causes that each variable has at least some proportion of NA values. We can see it through the following figure by noticing how much NA values exists. 
 
-ggplot(anes_use %>% 
+```{r NAs, echo = F, fig.width=8}
+anes_NAs=anes_dat%>%
+  summarise_all(list(na.mean=function(x){
+                              mean(is.na(x))}))
+anes_NAs=data.frame(nas=unlist(t(anes_NAs)))
+ggplot(anes_NAs, aes(x=nas)) + 
+  geom_histogram(color="black", 
+                 fill="white",
+                 binwidth=0.05)+
+  labs(title="Fractions of missing values",
+       x = "NA values") + 
+  theme_light()
+```
+
+
+
+Therefore, when handling the data, we must avoid directly using the ones with NA values or otherwise it would be problematic for the visualization. 
+
+The variable we care need to be extracted and treated as a categorical data, and for the purpose of analysis, I'll list these variables below:
+year
+turnout
+vote
+race
+gender
+education
+income
+region
+care.win
+media.trust
+gov.spend
+
+
+
+
+
+
+# 3. Education break down
+
+```{r, echo = F, fig.height=14, fig.width=14}
+anes_vote <- anes_use %>% 
   filter(!is.na(education) & !is.na(vote)) %>%
   filter(race == "1. White non-Hispanic (1948-2012)") %>%
   filter(vote != "7. Did not vote or voted but not for president (exc.1972)") %>%
+  filter(vote=="1. Democrat"|vote=="2. Republican")%>%
   group_by(year, education) %>%
   count(vote) %>%
   group_by(year, education) %>%
-  mutate(prop = n/sum(n)),
+  mutate(prop = n/sum(n))
+
+ggplot(anes_vote,
   aes(x = year, y = prop, fill = vote)) +
   geom_bar(stat = "identity", color = "black") +
-  scale_fill_manual('Vote', values = c("dodgerblue3", "firebrick2", "gold1", "lightgoldenrod1")) +
+  scale_fill_manual('Vote', values = c("dodgerblue3", "firebrick2")) +
+  theme(axis.text.x = element_text(angle = 60, size=10)) +
   facet_wrap(~education)
 ```
 
 
+# 4. Would Region be the Explanation?
 
-# Turnout rate
-```{r, message = F, echo = F, fig.height=14, fig.width=14}
-anes_turnout = anes_use %>%
-  filter(!is.na(race) & !is.na(turnout) & !is.na(education))%>%
-  mutate(is_white=ifelse(race=="1. White non-Hispanic (1948-2012)","White non-Hispanic (1948-2012)", "Not white"))%>%
-  filter(is_white=="White non-Hispanic (1948-2012)")%>%
-  group_by(year,education, race)%>%
-  count(turnout)%>%
-  group_by(year,education, race)%>%
-  mutate(
-    prop=n/sum(n)
-  )
+```{r, echo = F, fig.width = 10}
+# anes_region <- anes_use %>% 
+#   filter(!is.na(education) & !is.na(region)) %>%
+#   filter(vote == "1. Democrat") %>%
+#   filter(race == "1. White non-Hispanic (1948-2012)") %>%
+#   group_by(year, education) %>%
+#   count(region) %>%
+#   group_by(year, education) %>%
+#   mutate(prop = n/sum(n))
+
+anes_region <- anes_use %>%
+  filter(!is.na(region) & !is.na(education)) %>%
+  filter(race == "1. White non-Hispanic (1948-2012)") %>%
+  group_by(year, region) %>%
+  count(education) %>%
+  group_by(year, region) %>%
+  mutate(prop = n/sum(n))
+  
+
+
+ggplot(anes_region, aes(x = year, y = prop, fill = education)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual('Education Level', values = colorspace::diverge_hsv(7)) +
+  facet_wrap(~region) +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 60, size=10))
+```
+
+
+```{r, echo = F, fig.width = 8}
+anes_region_vote <- anes_use %>% 
+  filter(!is.na(vote) & !is.na(region)) %>%
+  filter(race == "1. White non-Hispanic (1948-2012)") %>%
+  filter(vote != "7. Did not vote or voted but not for president (exc.1972)") %>%
+  filter(vote=="1. Democrat"|vote=="2. Republican")%>%
+  group_by(year, region) %>%
+  count(vote) %>%
+  group_by(year, region) %>%
+  mutate(prop = n/sum(n))
+
+ggplot(anes_region_vote,
+  aes(x = year, y = prop, fill = vote)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual('Vote', values = c("dodgerblue3", "firebrick2")) +
+  facet_wrap(~region) +
+  theme_light() + 
+  theme(axis.text.x = element_text(angle = 60, size=10))
+
+```
+
+
+
+# 5. Could it be more people not willing to vote? 
+```{r, echo = F, fig.height=14, fig.width=14}
+anes_turnout <- anes_use %>%
+  filter(!is.na(turnout) & !is.na(education)) %>%
+  filter(race == "1. White non-Hispanic (1948-2012)") %>%
+  group_by(year, education) %>%
+  count(turnout) %>%
+  group_by(year, education) %>%
+  mutate(prop = n/sum(n))
+
 ggplot(anes_turnout, 
        aes(x=year, y=prop, fill=turnout)) +
   geom_bar(stat="identity", colour="black") + facet_wrap(~education, ncol=2) +
-  theme(axis.text.x = element_text(angle = 90, size=10),
-        axis.text.y = element_text(size=10),
-        plot.title = element_text(hjust = 0.5,size=15),
-        axis.title.x=element_text(size=12),
-        axis.title.y=element_text(size=12),
-        strip.text = element_text(size=12),
-        legend.title=element_text(size=12), 
-        legend.text=element_text(size=11))+
-  scale_fill_brewer('Voter Turnout',palette="Set2")+
-  labs(title="\nTurnout of Democrats and Republicans",x='\nYear\n',y='Proportion\n')
+  labs(title="\nTurnout of Democrats and Republicans",x='\nYear\n',y='Proportion\n') +
+  scale_fill_manual('Voter Turnout', values = colorspace::rainbow_hcl(3)) +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
-# Difference in Region
-
-```{r, message = F, echo = F, fig.height=14, fig.width=14}
-anes_region <- anes_use %>% 
-  filter(!is.na(education) & !is.na(region)) %>%
-  filter(vote == "1. Democrat") %>%
-  filter(race == "1. White non-Hispanic (1948-2012)") %>%
-  group_by(year, education) %>%
-  count(region) %>%
-  group_by(year, education) %>%
-  mutate(prop = n/sum(n))
 
 
-ggplot(anes_region, aes(x = year, y = prop, fill = region)) +
-  geom_bar(stat = "identity", color = "black") +
-  scale_fill_manual('Vote', values = c("dodgerblue3", "firebrick2", "gold1", "lightgoldenrod1", "green", "orange", "gold")) +
-  facet_wrap(~education)
-```
-# Preference and Evaluation
-
-```{r, echo = F, fig.height=14, fig.width=14}
-anes_pref <- anes_use %>%
-  filter(!is.na(pres.perf) & !is.na(education)) %>%
-  filter(race=="1. White non-Hispanic (1948-2012)") %>%
-  group_by(year, education) %>%
-  count(pres.perf) %>%
-  group_by(year,education) %>%
-  mutate(prop = n/sum(n))
-
-ggplot(anes_pref, aes(x = year, y = prop, fill = pres.perf)) +
-  geom_bar(stat = "identity", color = "black") + 
-  scale_fill_manual('Vote', values = colorspace::diverge_hsv(9)) +
-  facet_wrap(~education)
-# want more detailed restrictions
-```
-
-
-```{r, echo = F, fig.height=14, fig.width=14}
-anes_loc_perf <- anes_use %>%
-  filter(!is.na(loc.perf) & !is.na(education)) %>%
-  filter(race=="1. White non-Hispanic (1948-2012)") %>%
-  group_by(year, education) %>%
-  count(loc.perf) %>%
-  group_by(year,education) %>%
-  mutate(prop = n/sum(n))
-
-ggplot(anes_loc_perf, aes(x = year, y = prop, fill = loc.perf)) +
-  geom_bar(stat = "identity", color = "black") + 
-  scale_fill_manual('Vote', values = colorspace::diverge_hsv(9)) +
-  facet_wrap(~education)
-# want more detailed restrictions
-```
-
-```{r, echo = F, fig.height=14, fig.width=14}
-anes_trust <- anes_use %>%
-  filter(!is.na(media.trust) & !is.na(education)) %>%
-  filter(race=="1. White non-Hispanic (1948-2012)") %>%
-  group_by(year, education) %>%
-  count(media.trust) %>%
-  group_by(year,education) %>%
-  mutate(prop = n/sum(n))
-
-ggplot(anes_trust, aes(x = year, y = prop, fill = media.trust)) +
-  geom_bar(stat = "identity", color = "black") + 
-  scale_fill_manual('Vote', values = colorspace::diverge_hsv(6)) +
-  facet_wrap(~education)
-# want more detailed restrictions
-```
+# 6. What about how much spending the government willing to pay?
 ```{r, echo = F, fig.height=14, fig.width=14}
 anes_spend <- anes_use %>%
   filter(!is.na(gov.spend) & !is.na(education)) %>%
@@ -243,34 +244,52 @@ anes_spend <- anes_use %>%
 
 ggplot(anes_spend, aes(x = year, y = prop, fill = gov.spend)) +
   geom_bar(stat = "identity", color = "black") + 
-  scale_fill_manual('Vote', values = colorspace::diverge_hsv(9)) +
+  scale_fill_manual('Spending', values = colorspace::diverge_hsv(8)) +
   facet_wrap(~education)
-# want more detailed restrictions
 ```
 
-
-
-
-
-
-
-# Attitude towards voting
+# 7. Do different educated level people really care who would win?
 
 ```{r, echo = F, fig.height=10, fig.width=14}
-anes_att <- anes_use %>% 
+# anes_att <- anes_use %>% 
+#   filter(!is.na(education) & !is.na(care.win)) %>%
+#   filter(vote == "1. Democrat" | vote == "2. Republican") %>%
+#   filter(race=="1. White non-Hispanic (1948-2012)") %>%
+#   group_by(year, education, vote) %>%
+#   count(care.win) %>%
+#   group_by(year, education, vote) %>%
+#   mutate(prop = n/sum(n))
+
+anes_att_1 <- anes_use %>%
   filter(!is.na(education) & !is.na(care.win)) %>%
   filter(vote == "1. Democrat") %>%
-#  filter(education == "6. BA level degrees" | education == "7. Advanced degrees incl. LLB") %>%
+  filter(race=="1. White non-Hispanic (1948-2012)") %>%
+  group_by(year, education, vote) %>%
+  count(care.win) %>%
+  group_by(year, education, vote) %>%
+  mutate(prop = n/sum(n))
+
+anes_att_2 <- anes_use %>% 
+  filter(!is.na(education) & !is.na(care.win)) %>%
+  filter(vote == "2. Republican") %>%
+  filter(race=="1. White non-Hispanic (1948-2012)") %>%
   group_by(year, education) %>%
   count(care.win) %>%
   group_by(year, education) %>%
   mutate(prop = n/sum(n))
 
 
-ggplot(anes_att, aes(x = year, y = prop, group = care.win)) +
-  geom_line(aes(linetype = care.win, color = education)) + 
-  facet_wrap(~education)
+ggplot(data = anes_att_1, aes(x = year, y = prop, group = care.win)) +
+  geom_smooth(data = anes_att_1, method = "loess", formula = y~x, aes(linetype = care.win, color = "Democrat")) + 
+  geom_smooth(data = anes_att_2, method = "loess", formula = y~x, aes(linetype = care.win, color = "Republican")) +
+  scale_color_manual(values = c("dodgerblue3", "firebrick2")) +
+  scale_linetype_manual('linetype', values =c(1,2) ) +
+  facet_wrap(~education) +
+  theme_light() +  
+  theme(axis.text.x = element_text(angle = 60, size=10))
 ```
+
+
 
 
 
@@ -280,6 +299,10 @@ ggplot(anes_att, aes(x = year, y = prop, group = care.win)) +
 In conclusion, this might conclude that the voting behavior for white Americans high educational system people have changed a lot.
 
 Despite the fact that the Democratic Party typically promises more government aid programs, most low income white Republicans emphasize family ties and a strong relationship with Christianity and their church to help with their everyday problems, including financial problems, rather than relying on the government. Moreover, their high emphasis on community and values informed by their religion are reflected in their high turnout rate so that they can have a government that supports those values but does not intrude on their community. On the other hand, many low income white Democrats are Christian as well, but religion typically plays less of a role in their lives, and they believe more in government aid like welfare programs.
+
+
+# Reflection
+
 
 However, there could be additional variables in the survey we did not explore or even variables that were not in the survey at all that could explain more about these differences in voting behavior. Note that attributes like age, gender, occupation, region, and education levels did not seem to indicate that a person would be more likely to vote Democrat or Republican, but I have omitted this result from the analysis to focus more on differences rather than similarities.
 
