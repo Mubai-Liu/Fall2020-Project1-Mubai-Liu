@@ -1,5 +1,5 @@
 ---
-title: "How did education play a part in the election?"
+title: "How Does Education Evolving Play a Part in the Election?"
 author: "Mubai Liu"
 date: "9/30/2020"
 output: html_document
@@ -53,9 +53,6 @@ save(anes_use, file = "../output/data_story_use.RData")
 
 # 1. Background and Introduction
 
-As the time has come to 2020, the education evolved so much in the past centuries. It seems that nowadays the Republican Party would rather cut off the education or any other supporting fees on the program rather than supporting it. (source) On the other hand, the Democratic Party supports the idea of a larger government that is more involved in people’s everyday lives. As more and more programs of supporting the educational resources, the voting behavior of high educational people is under a swift change in the up coming few decades.
-
-
 The election in America has been through almost a century, over such a long period, things changed dramatically. Take education for example, back in the year of 1948, there's not much people who had a college degree and the system of education was not even comparable to today's system. To partially prove my point of having a huge difference in education over such a long period, here is what I've found using the survey data.
 
 ```{r, echo = F, fig.width=10}
@@ -73,20 +70,23 @@ ggplot(anes_edu,aes(x = year, y = prop, group = education)) +
   #geom_bar(stat = "identity", colour = "black")
 ```
 
-We are using the *American National Election Studies* (ANES)'s dataset. ANES are surveys of voters in the U.S. on the national scale. For each presidential election since 1948, ANES collects responses from respondents both before and after the election. The goal of ANES is to understand political behaviors using systematic surveys. ANES's data and results have been routinely used by news outlets, election campaigns and political researchers.
+Here we can see that the Red curve increased a lot since year of 1952 whereas the blue curve went down, which at least represents that the survey's targets are having more people with advanced degrees. Of course, the sample won't represent the population, so the shaded area are the potential outcomes within 95% interval.
+
+To further introduce the dataset, we are using the *American National Election Studies* (ANES)'s dataset. ANES are surveys of voters in the U.S. on the national scale. For each presidential election since 1948, ANES collects responses from respondents both before and after the election. The goal of ANES is to understand political behaviors using systematic surveys. ANES's data and results have been routinely used by news outlets, election campaigns and political researchers.
 
 The *Time Series Cumulative Data* of ANES include answers, from respondents from different years, on selected questions that have been asked in three or more ANES' *Time Series* studies. Tremendous amount of efforts have been put into data consolidation as variables are often named differently in different years. 
 
-This kind of change of time could influence people so much that even the voting behavior may shift from one party to the other like we are going to discuss about in this analysis blog. We may answer a few questions listed below to make the purpose more clear:
+This kind of change of time could influences people so much that even the voting behavior may shift from one party to the other like we are going to discuss about in this analysis blog. For the purpose of discussion, we are mainly focus on the **White Americans** and the two main parties in America: **Democrats and Republicans**. We may answer a few questions listed below to make the purpose more clear:
 
-1. Is there a change of how White American's high educated people vote for the party?
-2. If so, what are the potential factors of such phenomenon? Could we conclude that who have benefit the high educated group people will affect their voting result?
+**1. Is there a change of how White American's high educated/low educated people vote for the party?**
+
+**2. If so, what are the potential factors of such phenomenon?**
 
 <img src="../figs/PoliticsEducation.jpg" width="300">
 
 # 2. Potential Bias
 
-Although it is a reliable and a credible resource of data, the potential bias inevitably exists. The first is caused by the limitation of sample size.
+Although ANES is a reliable and a credible resource of data, the potential bias inevitably exists. The first is caused by the limitation of sample size.
 
 ```{r year barplot, message = F, echo = F, fig.width=8}
 barplot(table(anes_dat$VCF0004),
@@ -117,25 +117,18 @@ ggplot(anes_NAs, aes(x=nas)) +
 
 Therefore, when handling the data, we must avoid directly using the ones with NA values or otherwise it would be problematic for the visualization. 
 
-The variable we care need to be extracted and treated as a categorical data, and for the purpose of analysis, I'll list these variables below:
-year
-turnout
-vote
-race
-gender
-education
-income
-region
-care.win
-media.trust
-gov.spend
+Before we touch on the actual data, let us think for a second, what variables could be useful when we are doing an analysis with education and the election? I'll list all the variables that going to be discussed in below, and I know there could be far more factors beyond.
 
+- Year
+- Education Level
+- Race
+- Turnout
+- Vote
+- Region
+- Government Spending
+- Care About Who Would Win
 
-
-
-
-
-# 3. Education break down
+# 3. Education Break Down
 
 ```{r, echo = F, fig.height=14, fig.width=14}
 anes_vote <- anes_use %>% 
@@ -156,8 +149,13 @@ ggplot(anes_vote,
   facet_wrap(~education)
 ```
 
+From the bar graph, we can conclude that there's a reverse trending happening from the year of 2000. The 8 grader or less group tend to vote more for the Republicans where as the advanced degree group tend to vote more for the Democrats. Historically speaking, we can definitely see more relatively low educated people willing to vote for Democrats and those who have a diploma of college degree would rather vote Republican. So as far as the survey's data represents, we can conclude that the first question we mentioned before is definitely a **Yes, there indeed has a change**.
+
+Now, let's focus more on the second question, which is what may cause such a trend.
 
 # 4. Would Region be the Explanation?
+
+As we all know, the geographic influences are huge for the politics in America. Each state has their own preferences when considering which political side they'll be. Maybe a citizen who grow up in the more advanced city or a more educational resources would change how they vote? Let us examine below graphs to see the answer.
 
 ```{r, echo = F, fig.width = 10}
 # anes_region <- anes_use %>% 
@@ -187,7 +185,9 @@ ggplot(anes_region, aes(x = year, y = prop, fill = education)) +
   theme(axis.text.x = element_text(angle = 60, size=10))
 ```
 
+From this graph, although each relative region has a grow of education level, the obvious huge growth is from Northeast and Southeast, which makes a lot of sense as the famous ivy league school mostly located at Northeast and the Universities in California are also with high reputations. The much better resources seems lead to a more growth in the number of highly educated people.
 
+But does the geological differences really cause the shift of voting behaviors? Let's take a more deep down look inside.
 ```{r, echo = F, fig.width = 8}
 anes_region_vote <- anes_use %>% 
   filter(!is.na(vote) & !is.na(region)) %>%
@@ -208,7 +208,7 @@ ggplot(anes_region_vote,
   theme(axis.text.x = element_text(angle = 60, size=10))
 
 ```
-
+From the above graphs, there is clearly not too much differences over time compared to the figure where we answer the first question. We can see the relative voting preferences are all around 0.5 and even though Northeast and Southeast have a greater change of education, there can't conclude anything about their behavior is caused by that specifically. Therefore, region may not be such a crucial factor of the influences.
 
 
 # 5. Could it be more people not willing to vote? 
@@ -231,8 +231,10 @@ ggplot(anes_turnout,
 
 ```
 
+When we talk about the election, there's at least some degree's of people will not vote. Although above graphics can't could the turnout rate has changed over time, but we now understand that each group of educated people may have a different voting behavior. The lower the degree, the higher chance of not voting. 
 
 # 6. What about how much spending the government willing to pay?
+
 ```{r, echo = F, fig.height=14, fig.width=14}
 anes_spend <- anes_use %>%
   filter(!is.na(gov.spend) & !is.na(education)) %>%
@@ -247,6 +249,10 @@ ggplot(anes_spend, aes(x = year, y = prop, fill = gov.spend)) +
   scale_fill_manual('Spending', values = colorspace::diverge_hsv(8)) +
   facet_wrap(~education)
 ```
+
+This might explain the reason that causes the differences of voting behaviors happening nowadays. The higher level of education, the more likely they want to get more support like welfare from the government. But it won't explain the low level's attitudes' shift as they don't much even care about how much money the government spend. Since Democrats party now provides much more attentions to the tuition and support of universities, this relatively more higher educated people would rather support Democrats instead of Republicans. 
+
+
 
 # 7. Do different educated level people really care who would win?
 
@@ -289,23 +295,14 @@ ggplot(data = anes_att_1, aes(x = year, y = prop, group = care.win)) +
   theme(axis.text.x = element_text(angle = 60, size=10))
 ```
 
+Now for the final variable that we're going to illustrate, we check whether or not the voting is pointless after all. Because that proportion of change may happen simply cause they don't even care which parties win, especially for the low educated ones. All the graphs above have a similar shape which tells that people indeed starts to care more on the election of who's gonna win, which kinds of explain why for the group of 8 grades or lower people may starts to thinking differently compared to a half century before. But the rate of don't care is still very high compared to the advanced degree group. 
 
+# 8. Conclusion
 
+In conclusion, for the first question we've listed, the answer is a convincingly yes because of the proportion shifting as time goes on. But for the second question, due to the limitation of time and length of the blog, we simply can't list all the factors (like income etc.) to discuss and draw the graph with it, even though it is highly possible to be one of the reason. However, we managed to draw a few conclusions like the geological difference may not be the reason, and the concerns about who would win and how much of the government willing to do for supporting education may be the answer of the second question.
 
+# 9. Reflection
 
-
-# Conclusion
-
-In conclusion, this might conclude that the voting behavior for white Americans high educational system people have changed a lot.
-
-Despite the fact that the Democratic Party typically promises more government aid programs, most low income white Republicans emphasize family ties and a strong relationship with Christianity and their church to help with their everyday problems, including financial problems, rather than relying on the government. Moreover, their high emphasis on community and values informed by their religion are reflected in their high turnout rate so that they can have a government that supports those values but does not intrude on their community. On the other hand, many low income white Democrats are Christian as well, but religion typically plays less of a role in their lives, and they believe more in government aid like welfare programs.
-
-
-# Reflection
-
-
-However, there could be additional variables in the survey we did not explore or even variables that were not in the survey at all that could explain more about these differences in voting behavior. Note that attributes like age, gender, occupation, region, and education levels did not seem to indicate that a person would be more likely to vote Democrat or Republican, but I have omitted this result from the analysis to focus more on differences rather than similarities.
-
-Finally, although we now know more about the demographic differences between low income white Republicans and low income white Democrats, we still do not actually know for sure if these differences are merely correlated with their voting decisions or if they actually cause them to vote the way they do. We would need to use some causal inference techniques on the survey results or look at data other than the survey results to determine actual causal effects on low income white Americans’ voting behavior.
+Like I've mentioned above, the more variables we use for analysis the more accurate our result will be to explain these differences in voting behavior. Note that attributes like age, gender, occupation did not seem to have any impact on our result so I choose to ignore for a second. But without even try to check the hypothesis is dangerous. I understand that there are far more space to discover such as the more quantitative analysis beyond simply drawing graphs, but for now we're just settling down on the Exploratory part and if we have time we'll do more like a prediction or inference on this dataset. This would be such an insteresting topic with the upcoming 2020's election.
 
 
