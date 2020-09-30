@@ -1,5 +1,5 @@
 ---
-title: "How Does Education Evolving Play a Part in the Election?"
+title: "How Does Evolving Education Play a Part in the Election?"
 author: "Mubai Liu"
 date: "9/30/2020"
 output: html_document
